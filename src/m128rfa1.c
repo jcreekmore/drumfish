@@ -34,8 +34,7 @@
 
 #define PC_START 0x1f800
 
-uart_pty_t uart_pty_0;
-uart_pty_t uart_pty_1;
+uart_pty_t uart_pty[2];
 
 static void
 m128rfa1_init(avr_t *avr)
@@ -46,8 +45,8 @@ m128rfa1_init(avr_t *avr)
 static void
 m128rfa1_deinit(avr_t *avr)
 {
-    uart_pty_stop(&uart_pty_0);
-    uart_pty_stop(&uart_pty_1);
+    uart_pty_stop(&uart_pty[0]);
+    uart_pty_stop(&uart_pty[1]);
 
     flash_close(avr->flash, avr->flashend + 1);
     avr->flash = NULL;
@@ -93,11 +92,17 @@ m128rfa1_start(void)
     avr->codeend = avr->flashend;
 
     /* Setup our UARTs */
-    uart_pty_init(avr, &uart_pty_0);
-    uart_pty_connect(&uart_pty_0, '0');
+    if (uart_pty_init(avr, &uart_pty[0], '0')) {
+        fprintf(stderr, "Unable to start UART0.\n");
+        return NULL;
+    }
+    uart_pty_connect(&uart_pty[0]);
 
-    uart_pty_init(avr, &uart_pty_1);
-    uart_pty_connect(&uart_pty_1, '1');
+    if (uart_pty_init(avr, &uart_pty[1], '1')) {
+        fprintf(stderr, "Unable to start UART1.\n");
+        return NULL;
+    }
+    uart_pty_connect(&uart_pty[1]);
 
     printf("Booting from 0x%04x.\n", PC_START);
 

@@ -35,17 +35,17 @@ enum {
 	IRQ_UART_PTY_COUNT
 };
 
-DECLARE_FIFO(uint8_t,uart_pty_fifo, 512);
+DECLARE_FIFO(uint8_t, uart_pty_fifo, 512);
 
 typedef struct uart_pty_port_t {
-	int			tap : 1, crlf : 1;
 	int 		s;			// socket we chat on
 	char 		slavename[64];
 	uart_pty_fifo_t in;
 	uart_pty_fifo_t out;
 	uint8_t		buffer[512];
-	size_t		buffer_len, buffer_done;
-} uart_pty_port_t, *uart_pty_port_p;
+	size_t		buffer_len;
+    size_t      buffer_done;
+} uart_pty_port_t;
 
 typedef struct uart_pty_t {
 	avr_irq_t *	irq;		// irq list
@@ -55,25 +55,13 @@ typedef struct uart_pty_t {
 	int			xon;
     char        uart;
 
-	union {
-		struct {
-			uart_pty_port_t		pty;
-			uart_pty_port_t		tap;
-		};
-		uart_pty_port_t port[2];
-	};
+    uart_pty_port_t port;
 } uart_pty_t;
 
-void
-uart_pty_init(
-		struct avr_t * avr,
-		uart_pty_t * b);
-void
-uart_pty_stop(uart_pty_t * p);
+int uart_pty_init( struct avr_t *avr, uart_pty_t *b, char uart);
 
-void
-uart_pty_connect(
-		uart_pty_t * p,
-		char uart);
+void uart_pty_stop(uart_pty_t *p);
+
+void uart_pty_connect(uart_pty_t *p);
 
 #endif /* __UART_PTY_H___ */
