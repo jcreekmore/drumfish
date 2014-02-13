@@ -23,6 +23,7 @@
 
 #include <sys/types.h>
 #include <stdlib.h>
+#include <poll.h>
 #include <pthread.h>
 #include <string.h>
 #include <stdio.h>
@@ -106,33 +107,44 @@ static void *
 uart_pty_thread(void *param)
 {
 	uart_pty_t *p = (uart_pty_t*)param;
+    int ret;
+
+    /* Setup our poll info. We'll always be checking the tty */
+    struct pollfd pfd = {
+        .fd = p->port.s,
+    };
 
 	while (1) {
-		fd_set read_set, write_set;
-		int max = 0;
-		FD_ZERO(&read_set);
-		FD_ZERO(&write_set);
+        /* Reset the events we care about to just HUP */
+        pfd.events = POLLHUP;
 
-        // read more only if buffer was flushed
+        // read more only if buffer was empty
         if (p->port.buffer_len == p->port.buffer_done) {
-            FD_SET(p->port.s, &read_set);
-            max = MAX(p->port.s, max);
+            /* listen for if there's data to read */
+            pfd.events |= POLLIN;
         }
 
+        /* If we have data in our outbound fifo, check that we can write */
         if (!uart_pty_fifo_isempty(&p->port.in)) {
-            FD_SET(p->port.s, &write_set);
-            max = MAX(p->port.s, max);
+            pfd.events |= POLLOUT;
 		}
 
-		struct timeval timo = { 0, 500 };	// short, but not too short interval
-		int ret = select(max + 1, &read_set, &write_set, NULL, &timo);
+        /* Something short but not too short */
+        ret = poll(&pfd, 1, 500);
 
 		if (!ret)
 			continue;
 		if (ret < 0)
 			break;
 
-        if (FD_ISSET(p->port.s, &read_set)) {
+        /* If no one is connected to the UART, we don't want to
+         * cache data.
+         */
+        if (pfd.revents & POLLHUP) {
+            uart_pty_fifo_read(&p->port.in);
+        }
+
+        if (pfd.revents & POLLIN) {
             ssize_t r = read(p->port.s, p->port.buffer,
                     sizeof(p->port.buffer) - 1);
             p->port.buffer_len = r;
@@ -150,7 +162,8 @@ uart_pty_thread(void *param)
             TRACE(printf("w %3d:%02x\n", wi, p->port.buffer[index]);)
         }
 
-        if (FD_ISSET(p->port.s, &write_set)) {
+        /* Can we write data to the TTY */
+        if (pfd.revents & POLLOUT) {
             uint8_t buffer[512];
             // write them in fifo
             uint8_t *dst = buffer;
@@ -215,6 +228,13 @@ uart_pty_init(struct avr_t *avr, uart_pty_t *p, char uart)
 
     /* The master is the socket we care about and want to use */
     p->port.s = m;
+
+    /* We close the slave side so we can watch when someone connects
+     * so that we aren't buffering up the bytes before a connection and
+     * then dumping that buffer on them when they connect, which is
+     * obviously not how serial works.
+     */
+    close(s);
 
 	ret = pthread_create(&p->thread, NULL, uart_pty_thread, p);
     if (ret) {
