@@ -31,6 +31,6 @@ struct drumfish_cfg {
 };
 
 
-avr_t *m128rfa1_start(struct drumfish_cfg *cfg);
+avr_t *m128rfa1_create(struct drumfish_cfg *cfg);
 
 #endif /* __DRUMFISH_H__ */

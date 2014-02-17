@@ -30,6 +30,7 @@
 #include <sim_avr.h>
 #include "uart_pty.h"
 
+#include "drumfish.h"
 #include "flash.h"
 
 #define PC_START 0x1f800
@@ -53,7 +54,7 @@ m128rfa1_deinit(avr_t *avr)
 }
 
 avr_t *
-m128rfa1_start(void)
+m128rfa1_create(struct drumfish_cfg *config)
 {
     avr_t *avr;
 
