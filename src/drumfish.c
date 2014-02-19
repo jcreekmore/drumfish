@@ -19,6 +19,8 @@
  *  along with drumfish.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
+
 #include <sys/types.h>
 #include <getopt.h>
 #include <stdio.h>
@@ -32,6 +34,7 @@
 #include "drumfish.h"
 #include "flash.h"
 
+#define DEFAULT_PFLASH_PATH "/.drumfish/pflash.dat"
 #define MAX_FLASH_FILES 1024
 
 /* We have 1 emulated board and here's the handle to
@@ -59,17 +62,24 @@ void
 usage(const char *argv0)
 {
     fprintf(stderr,
-"Usage: %s [-p data_path] [-f firmware.hex] [-v] [-m MAC]\n"
+"Usage: %s [-p pflash] [-f firmware.hex] [-v] [-m MAC]\n"
 "\n"
-"  -p data_path - Override default path for storing the EEPROM and flash data\n"
-"  -f firmware  - Load the requested 'firmware' file into the device's flash\n"
+"  -p pflash    - Path to device's progammable flash storage\n"
+"  -f ihex      - Load the requested 'ihex' file into the device's flash\n"
 "  -v           - Increase verbosity of messages\n"
 "  -m           - Radio MAC address\n"
 "\n"
+"Defaults:\n"
+"  Programmable Flash Storage: $HOME/.drumfish/pflash.dat\n"
+"\n"
 "Examples:\n"
 "  %s -m 00:11:22:00:9E:35\n"
+"\n"
 "  %s -f bootloader.hex\n"
-"  %s -f bootloader.hex -f payload.hex\n",
+"    Loads the 'bootloader.hex' blob into flash before starting the CPU\n"
+"\n"
+"  %s -f bootloader.hex -f payload.hex\n"
+"    Would load 2 firmware blobs into flash before starting the CPU\n",
 argv0, argv0, argv0, argv0);
 
 }
@@ -78,6 +88,7 @@ int
 main(int argc, char *argv[])
 {
     const char *argv0 = argv[0];
+    char *env;
     struct drumfish_cfg config;
     struct sigaction act;
     int state = cpu_Limbo;
@@ -86,7 +97,7 @@ main(int argc, char *argv[])
     size_t flash_file_len = 0;
 
     config.mac = NULL;
-    config.data_path = NULL;
+    config.pflash = NULL;
     config.foreground = 1;
     config.verbose = 0;
 
@@ -123,10 +134,10 @@ main(int argc, char *argv[])
                 }
                 break;
             case 'p':
-                config.data_path = strdup(optarg);
-                if (!config.data_path) {
+                config.pflash = strdup(optarg);
+                if (!config.pflash) {
                     fprintf(stderr, "Failed to allocate memory for "
-                            "data path.\n");
+                            "programmable flashh.\n");
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -152,6 +163,22 @@ main(int argc, char *argv[])
                 exit(EXIT_FAILURE);
         }
     }
+
+    /* If the user did not override the default location of the
+     * programmable flash storage, then set the default
+     */
+    env = getenv("HOME");
+    if (!env || !env[0]) {
+        fprintf(stderr, "Unable to determine your HOME.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (asprintf(&config.pflash, "%s%s", env, DEFAULT_PFLASH_PATH) < 0) {
+        fprintf(stderr, "Failed to allocate memory for pflash filename.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Programmable Flash Storage: %s\n", config.pflash);
 
     /* Handle the bare minimum signals */
     /* Yes I should use sigset_t here and use sigemptyset() */
@@ -196,4 +223,6 @@ main(int argc, char *argv[])
     }
 
     avr_terminate(avr);
+
+    free(config.pflash);
 }

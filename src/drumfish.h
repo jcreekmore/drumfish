@@ -25,7 +25,7 @@
 
 struct drumfish_cfg {
     char *mac;
-    char *data_path;
+    char *pflash;
     int foreground;
     int verbose;
 };

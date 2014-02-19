@@ -38,13 +38,15 @@
 uart_pty_t uart_pty[2];
 
 static void
-m128rfa1_init(avr_t *avr)
+m128rfa1_init(avr_t *avr, void *data)
 {
-    avr->flash = flash_open_or_create("test.flash", avr->flashend + 1);
+    struct drumfish_cfg *config = (struct drumfish_cfg *)data;
+
+    avr->flash = flash_open_or_create(config->pflash, avr->flashend + 1);
 }
 
 static void
-m128rfa1_deinit(avr_t *avr)
+m128rfa1_deinit(avr_t *avr, void *data)
 {
     uart_pty_stop(&uart_pty[0]);
     uart_pty_stop(&uart_pty[1]);
@@ -67,6 +69,7 @@ m128rfa1_create(struct drumfish_cfg *config)
     /* Setup any additional init/deinit routines */
     avr->special_init = m128rfa1_init;
     avr->special_deinit = m128rfa1_deinit;
+    avr->special_data = config;
 
     /* Initialize our AVR */
     avr_init(avr);
