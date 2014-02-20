@@ -25,6 +25,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,41 @@
 #include <unistd.h>
 
 #include <sim_hex.h>
+
+static int
+flash_create_dir(const char *path)
+{
+    char *dir;
+    char *path_copy = NULL;
+
+    /* Make a local copy so we can modify it */
+    path_copy = strdup(path);
+
+    /* Now let's stuff a NULL byte at the last component */
+    dir = dirname(path_copy);
+
+try_again:
+    /* Create the directory */
+    if (mkdir(dir, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP)) {
+        /* if ENOENT is set then a path component is missing and
+         * we need to create the parent
+         */
+        if (errno == ENOENT) {
+            /* If it worked, try this directory again */
+            if (!flash_create_dir(dir))
+                goto try_again;
+        }
+
+        fprintf(stderr, "Failed to create directory '%s': %s\n",
+                dir, strerror(errno));
+
+        free(path_copy);
+        return -1;
+    }
+
+    free(path_copy);
+    return 0;
+}
 
 uint8_t *
 flash_open_or_create(const char *file, size_t len)
@@ -42,10 +78,21 @@ flash_open_or_create(const char *file, size_t len)
     int must_ff = 0;
     uint8_t *buf;
 
+try_again:
     fd = open(file, O_RDWR | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd == -1) {
-        fprintf(stderr, "Unable to open or create '%s': %s\n",
-                file, strerror(errno));
+        /* if errno is ENOENT, then a part of the path doesn't exist
+         * or a symbolic link in the path is busted so we'll try to
+         * make the path
+         */
+        if (errno == ENOENT) {
+            /* if the path was mad successfully, try the whole process again */
+            if (!flash_create_dir(file))
+                goto try_again;
+        }
+
+        fprintf(stderr, "Unable to open or create '%s' %d: %s\n",
+                file, errno, strerror(errno));
         goto err;
     }
 
