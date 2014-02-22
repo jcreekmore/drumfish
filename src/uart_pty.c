@@ -264,6 +264,7 @@ uart_pty_stop(uart_pty_t *p)
 {
 	void *ret;
     char link[1024];
+    int join_status;
 
     fprintf(stderr, "Shutting down UART%c\n", p->uart);
 
@@ -278,9 +279,9 @@ uart_pty_stop(uart_pty_t *p)
         p->port.s = -1;
     }
 
-	if (pthread_join(p->thread, &ret)) {
+	if ((join_status = pthread_join(p->thread, &ret))) {
         fprintf(stderr, "Shutting down UART%c failed: %s\n",
-                p->uart, strerror(errno));
+                p->uart, strerror(join_status));
     }
 }
 
