@@ -215,6 +215,14 @@ main(int argc, char *argv[])
     }
     free(flash_file);
 
+    /* Ensure the instruction we're about to execute is legit */
+    if (avr->flash[avr->pc] == 0xff) {
+        fprintf(stderr, "No firmware loaded in programmable flash, unable "
+                "to boot.\n");
+        fprintf(stderr, "Try using '-f firmware.hex' to supply one.\n");
+        exit(EXIT_FAILURE);
+    }
+
     /* Our main event loop */
     for (;;) {
         state = avr_run(avr);
