@@ -263,7 +263,7 @@ uart_pty_stop(uart_pty_t *p)
     snprintf(link, sizeof(link), "/tmp/drumfish-%d-uart%c", getpid(), p->uart);
     unlink(link);
 
-	pthread_kill(p->thread, SIGINT);
+	pthread_cancel(p->thread);
 
     if (p->port.s != -1) {
         close(p->port.s);
