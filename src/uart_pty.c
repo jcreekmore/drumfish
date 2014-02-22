@@ -116,11 +116,15 @@ uart_pty_thread(void *param)
 {
 	uart_pty_t *p = (uart_pty_t*)param;
     int ret;
+    sigset_t set;
 
     /* Setup our poll info. We'll always be checking the tty */
     struct pollfd pfd = {
         .fd = p->port.s,
     };
+
+    sigfillset(&set);
+    sigprocmask(SIG_SETMASK, &set, NULL);
 
 	while (1) {
         /* Reset the events we care about to just HUP */
