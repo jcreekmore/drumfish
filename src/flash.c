@@ -34,6 +34,8 @@
 
 #include <sim_hex.h>
 
+#include "flash.h"
+
 static int
 flash_create_dir(const char *path)
 {
@@ -70,7 +72,7 @@ try_again:
 }
 
 uint8_t *
-flash_open_or_create(const char *file, size_t len)
+flash_open_or_create(const char *file, off_t len)
 {
     int fd = -1;
     struct stat st;
@@ -148,8 +150,6 @@ err:
 int
 flash_load(const char *file, uint8_t *start, size_t len)
 {
-    uint32_t flash_size, flash_base;
-    uint8_t *flash_data;
     int items;
     ihex_chunk_p chunks;
     int i;

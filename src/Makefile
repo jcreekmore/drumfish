@@ -1,6 +1,20 @@
 
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
 BUILD_CFLAGS = -std=gnu99 -g \
+  -Wall -Wextra -W \
+  -Wbad-function-cast \
+  -Waggregate-return -Wcast-align \
+  -Wfloat-equal -Wimplicit \
+  -Wmissing-declarations -Wmissing-prototypes \
+  -Wnested-externs -Wpointer-arith \
+  -Wsign-compare -Wchar-subscripts \
+  -Wstrict-prototypes -Wshadow \
+  -Wformat-security -Wtype-limits \
+  -Werror=format-security \
+  -Wformat -Wformat=2 -Wmissing-braces \
+  -Wreturn-type -Wunused-label \
+  -Wcast-qual -Wdisabled-optimization \
+  -Wwrite-strings -Wmissing-format-attribute \
 			   $(shell PKG_CONFIG_LIBDIR=/usr/local/lib/pkgconfig/ pkg-config --cflags simavr) \
 			   $(CFLAGS)
 BUILD_LDFLAGS = $(LDFLAGS)

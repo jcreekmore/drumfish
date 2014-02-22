@@ -61,6 +61,8 @@ uart_pty_in_hook(
 		uint32_t value,
 		void *param)
 {
+    (void)irq;
+
 	uart_pty_t *p = (uart_pty_t*)param;
 	TRACE(printf("uart_pty_in_hook %02x\n", value);)
 	uart_pty_fifo_write(&p->port.in, value);
@@ -86,6 +88,9 @@ uart_pty_flush_incoming(uart_pty_t *p)
 static void
 uart_pty_xon_hook(struct avr_irq_t *irq, uint32_t value, void *param)
 {
+    (void)irq;
+    (void)value;
+
 	uart_pty_t *p = (uart_pty_t*)param;
 	TRACE(if (!p->xon) printf("uart_pty_xon_hook\n");)
 	p->xon = 1;
@@ -98,6 +103,9 @@ uart_pty_xon_hook(struct avr_irq_t *irq, uint32_t value, void *param)
 static void
 uart_pty_xoff_hook(struct avr_irq_t *irq, uint32_t value, void *param)
 {
+    (void)irq;
+    (void)value;
+
 	uart_pty_t *p = (uart_pty_t*)param;
 	TRACE(if (p->xon) printf("uart_pty_xoff_hook\n");)
 	p->xon = 0;

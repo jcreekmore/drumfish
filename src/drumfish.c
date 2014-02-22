@@ -58,7 +58,7 @@ handler(int sig)
     }
 }
 
-void
+static void
 usage(const char *argv0)
 {
     fprintf(stderr,
@@ -205,7 +205,7 @@ main(int argc, char *argv[])
     }
 
     /* Flash in any requested firmware, while cleaning up our memory */
-    for (int i = 0; i < flash_file_len; i++) {
+    for (size_t i = 0; i < flash_file_len; i++) {
         if (flash_load(flash_file[i], avr->flash, avr->flashend + 1)) {
             fprintf(stderr, "Failed to load '%s' into flash.\n", flash_file[i]);
             exit(EXIT_FAILURE);

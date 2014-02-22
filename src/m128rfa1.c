@@ -48,6 +48,8 @@ m128rfa1_init(avr_t *avr, void *data)
 static void
 m128rfa1_deinit(avr_t *avr, void *data)
 {
+    (void)data;
+
     uart_pty_stop(&uart_pty[0]);
     uart_pty_stop(&uart_pty[1]);
 

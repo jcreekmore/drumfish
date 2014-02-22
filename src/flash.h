@@ -22,7 +22,7 @@
 #ifndef __FLASH_H__
 #define __FLASH_H__
 
-uint8_t * flash_open_or_create(const char *file, size_t len);
+uint8_t * flash_open_or_create(const char *file, off_t len);
 
 int flash_load(const char *file, uint8_t *start, size_t len);
 
