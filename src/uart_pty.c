@@ -267,14 +267,15 @@ void
 uart_pty_stop(uart_pty_t *p)
 {
 	void *ret;
-    char link[1024];
+    char uart_link[1024];
     int join_status;
 
     fprintf(stderr, "Shutting down UART%c\n", p->uart);
 
     /* Remove our symlink, but don't care if its already gone */
-    snprintf(link, sizeof(link), "/tmp/drumfish-%d-uart%c", getpid(), p->uart);
-    unlink(link);
+    snprintf(uart_link, sizeof(uart_link), "/tmp/drumfish-%d-uart%c",
+            getpid(), p->uart);
+    unlink(uart_link);
 
 	pthread_cancel(p->thread);
 
@@ -294,7 +295,7 @@ uart_pty_connect(uart_pty_t *p)
 {
 	uint32_t f = 0;
     avr_irq_t *src, *dst, *xon, *xoff;
-    char link[1024];
+    char uart_link[1024];
 
 	// disable the stdio dump, as we are sending binary there
 	avr_ioctl(p->avr, AVR_IOCTL_UART_GET_FLAGS(p->uart), &f);
@@ -320,15 +321,16 @@ uart_pty_connect(uart_pty_t *p)
 		avr_irq_register_notify(xoff, uart_pty_xoff_hook, p);
 
     /* Build the symlink path for the UART */
-    snprintf(link, sizeof(link), "/tmp/drumfish-%d-uart%c", getpid(), p->uart);
+    snprintf(uart_link, sizeof(uart_link), "/tmp/drumfish-%d-uart%c",
+            getpid(), p->uart);
     /* Unconditionally attempt to remove the old one */
-    unlink(link);
+    unlink(uart_link);
 
-    if (symlink(p->port.slavename, link) != 0) {
+    if (symlink(p->port.slavename, uart_link) != 0) {
         fprintf(stderr, "UART%c: Can't create symlink to %s from %s: %s",
-                p->uart, link, p->port.slavename, strerror(errno));
+                p->uart, uart_link, p->port.slavename, strerror(errno));
     } else {
-        printf("UART%c available at %s\n", p->uart, link);
+        printf("UART%c available at %s\n", p->uart, uart_link);
     }
 }
 
