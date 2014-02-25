@@ -22,7 +22,9 @@
 #define _GNU_SOURCE
 
 #include <sys/types.h>
+#include <errno.h>
 #include <getopt.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -30,6 +32,7 @@
 #include <unistd.h>
 
 #include <sim_avr.h>
+#include <sim_gdb.h>
 
 #include "drumfish.h"
 #include "flash.h"
@@ -62,10 +65,11 @@ static void
 usage(const char *argv0)
 {
     fprintf(stderr,
-"Usage: %s [-p pflash] [-f firmware.hex] [-v] [-m MAC]\n"
+"Usage: %s [-v] [-p pflash] [-f firmware.hex] [-g port] [-m MAC]\n"
 "\n"
 "  -p pflash    - Path to device's progammable flash storage\n"
 "  -f ihex      - Load the requested 'ihex' file into the device's flash\n"
+"  -g port      - Runs the AVR CPU under gdbserver on 'port'\n"
 "  -v           - Increase verbosity of messages\n"
 "  -m           - Radio MAC address\n"
 "\n"
@@ -73,7 +77,7 @@ usage(const char *argv0)
 "  Programmable Flash Storage: $HOME/.drumfish/pflash.dat\n"
 "\n"
 "Examples:\n"
-"  %s -m 00:11:22:00:9E:35\n"
+"  %s -g 1234 -m 00:11:22:00:9E:35\n"
 "\n"
 "  %s -f bootloader.hex\n"
 "    Loads the 'bootloader.hex' blob into flash before starting the CPU\n"
@@ -95,13 +99,15 @@ main(int argc, char *argv[])
     int opt;
     char **flash_file = NULL;
     size_t flash_file_len = 0;
+    long  port;
 
     config.mac = NULL;
     config.pflash = NULL;
     config.foreground = 1;
     config.verbose = 0;
+    config.gdb = 0;
 
-    while ((opt = getopt(argc, argv, "f:p:m:vh")) != -1) {
+    while ((opt = getopt(argc, argv, "f:p:m:vgh")) != -1) {
         switch (opt) {
             case 'f':
                 /* Increment how many file names we need to keep track of */
@@ -150,6 +156,23 @@ main(int argc, char *argv[])
                 break;
             case 'v':
                config.verbose++;
+               break;
+            case 'g':
+               errno = 0;
+               port = strtol(optarg, NULL, 10);
+               if (errno != 0) {
+                   fprintf(stderr, "Invalid supplied GDB port '%s': %s\n",
+                           optarg, strerror(errno));
+                   exit(EXIT_FAILURE);
+               }
+
+               if (port <= 1024 && port > UINT16_MAX) {
+                   fprintf(stderr, "Invalid supplied GDB port %ld. "
+                           "Must be 1024 < port <= %d\n", port, UINT16_MAX);
+                   exit(EXIT_FAILURE);
+               }
+
+               config.gdb = port;
                break;
             case 'V':
                /* print version */
@@ -221,6 +244,19 @@ main(int argc, char *argv[])
                 "to boot.\n");
         fprintf(stderr, "Try using '-f firmware.hex' to supply one.\n");
         exit(EXIT_FAILURE);
+    }
+
+    /* If the user wants to run the core with GDB server enabled,
+     * set that up.
+     */
+    if (config.gdb) {
+        avr->gdb_port = config.gdb;
+        /* Normally starting the CPU should be in limbo, but the
+         * GDB code of simavr wants it to be stopped.
+         */
+        state = cpu_Stopped;
+
+        avr_gdb_init(avr);
     }
 
     /* Our main event loop */

@@ -28,6 +28,7 @@ struct drumfish_cfg {
     char *pflash;
     int foreground;
     int verbose;
+    short gdb;
 };
 
 
