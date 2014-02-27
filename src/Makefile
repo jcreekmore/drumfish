@@ -22,7 +22,7 @@ BUILD_CFLAGS += $(CFLAGS)
 
 # Rules to build drumfish
 bin_PROGRAMS += drumfish
-drumfish_SOURCES = drumfish.c flash.c m128rfa1.c uart_pty.c
+drumfish_SOURCES = drumfish.c flash.c m128rfa1.c uart_pty.c df_log.c
 drumfish_OBJS = $(drumfish_SOURCES:.c=.o)
 drumfish_LDFLAGS = $(LDFLAGS)
 drumfish_LDADD = $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs simavr)
