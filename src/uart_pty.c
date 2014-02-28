@@ -40,6 +40,8 @@
 #include "avr_uart.h"
 #include "sim_hex.h"
 
+#include "df_log.h"
+
 DEFINE_FIFO(uint8_t, uart_pty_fifo);
 
 #define TRACE(_w) _w
@@ -63,9 +65,9 @@ uart_pty_in_hook(
 {
     (void)irq;
 
-	uart_pty_t *p = (uart_pty_t*)param;
-	TRACE(printf("uart_pty_in_hook %02x\n", value);)
-	uart_pty_fifo_write(&p->port.in, value);
+    uart_pty_t *p = (uart_pty_t*)param;
+    df_log_msg(DF_LOG_DEBUG, "uart_pty_in_hook %02x\n", value);
+    uart_pty_fifo_write(&p->port.in, value);
 }
 
 // try to empty our fifo, the uart_pty_xoff_hook() will be called when
@@ -73,12 +75,14 @@ uart_pty_in_hook(
 static void
 uart_pty_flush_incoming(uart_pty_t *p)
 {
-	while (p->xon && !uart_pty_fifo_isempty(&p->port.out)) {
-		TRACE(int r = p->port.out.read;)
-		uint8_t byte = uart_pty_fifo_read(&p->port.out);
-		TRACE(printf("uart_pty_flush_incoming send r %03d:%02x\n", r, byte);)
-		avr_raise_irq(p->irq + IRQ_UART_PTY_BYTE_OUT, byte);
-	}
+    uint8_t byte;
+
+    while (p->xon && !uart_pty_fifo_isempty(&p->port.out)) {
+        byte = uart_pty_fifo_read(&p->port.out);
+        df_log_msg(DF_LOG_DEBUG, "uart_pty_flush_incoming send r %03d:%02x\n",
+                p->port.out.read, byte);
+        avr_raise_irq(p->irq + IRQ_UART_PTY_BYTE_OUT, byte);
+    }
 }
 
 /*
@@ -92,9 +96,12 @@ uart_pty_xon_hook(struct avr_irq_t *irq, uint32_t value, void *param)
     (void)value;
 
 	uart_pty_t *p = (uart_pty_t*)param;
-	TRACE(if (!p->xon) printf("uart_pty_xon_hook\n");)
-	p->xon = 1;
-	uart_pty_flush_incoming(p);
+
+    if (!p->xon)
+        df_log_msg(DF_LOG_INFO, "UART%c xon\n", p->uart);
+
+    p->xon = 1;
+    uart_pty_flush_incoming(p);
 }
 
 /*
@@ -107,8 +114,11 @@ uart_pty_xoff_hook(struct avr_irq_t *irq, uint32_t value, void *param)
     (void)value;
 
 	uart_pty_t *p = (uart_pty_t*)param;
-	TRACE(if (p->xon) printf("uart_pty_xoff_hook\n");)
-	p->xon = 0;
+
+    if (p->xon)
+        df_log_msg(DF_LOG_INFO, "UART%c xoff\n", p->uart);
+
+    p->xon = 0;
 }
 
 static void *
@@ -168,10 +178,10 @@ uart_pty_thread(void *param)
         while (p->port.buffer_done < p->port.buffer_len &&
                 !uart_pty_fifo_isfull(&p->port.out)) {
             int index = p->port.buffer_done++;
-            TRACE(int wi = p->port.out.write;)
-                uart_pty_fifo_write(&p->port.out,
-                        p->port.buffer[index]);
-            TRACE(printf("w %3d:%02x\n", wi, p->port.buffer[index]);)
+            uart_pty_fifo_write(&p->port.out, p->port.buffer[index]);
+
+            df_log_msg(DF_LOG_DEBUG, "w %3d:%02x\n", p->port.out.write,
+                    p->port.buffer[index]);
         }
 
         /* Can we write data to the TTY */
@@ -270,7 +280,7 @@ uart_pty_stop(uart_pty_t *p)
     char uart_link[1024];
     int join_status;
 
-    fprintf(stderr, "Shutting down UART%c\n", p->uart);
+    df_log_msg(DF_LOG_INFO, "Shutting down UART%c\n", p->uart);
 
     /* Remove our symlink, but don't care if its already gone */
     snprintf(uart_link, sizeof(uart_link), "/tmp/drumfish-%d-uart%c",
@@ -285,7 +295,7 @@ uart_pty_stop(uart_pty_t *p)
     }
 
 	if ((join_status = pthread_join(p->thread, &ret))) {
-        fprintf(stderr, "Shutting down UART%c failed: %s\n",
+        df_log_msg(DF_LOG_ERR, "Shutting down UART%c failed: %s\n",
                 p->uart, strerror(join_status));
     }
 }

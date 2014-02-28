@@ -114,7 +114,5 @@ m128rfa1_create(struct drumfish_cfg *config)
     }
     uart_pty_connect(&uart_pty[1]);
 
-    printf("Booting from 0x%04x.\n", PC_START);
-
     return avr;
 }

@@ -37,6 +37,7 @@
 #include "drumfish.h"
 #include "flash.h"
 #include "df_cores.h"
+#include "df_log.h"
 
 #define DEFAULT_PFLASH_PATH "/.drumfish/pflash.dat"
 #define MAX_FLASH_FILES 1024
@@ -193,6 +194,9 @@ main(int argc, char *argv[])
         }
     }
 
+    /* Initialize our logging support */
+    df_log_init(&config);
+
     /* If the user did not override the default location of the
      * programmable flash storage, then set the default
      */
@@ -264,6 +268,11 @@ main(int argc, char *argv[])
 
         avr_gdb_init(avr);
     }
+
+    /* Capture the current time to be used as when our CPU started */
+    df_log_start_time();
+
+    df_log_msg(DF_LOG_INFO, "Booting CPU from 0x%x.\n", avr->pc);
 
     /* Our main event loop */
     for (;;) {
