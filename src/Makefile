@@ -1,4 +1,6 @@
 
+bin_PROGRAMS =
+
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
 BUILD_CFLAGS = -std=gnu99 -g \
   -Wall -Wextra -W \
@@ -14,17 +16,17 @@ BUILD_CFLAGS = -std=gnu99 -g \
   -Wformat -Wformat=2 -Wmissing-braces \
   -Wreturn-type -Wunused-label \
   -Wcast-qual -Wdisabled-optimization \
-  -Wwrite-strings -Wmissing-format-attribute \
-  $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags simavr) \
-  $(CFLAGS)
+  -Wwrite-strings -Wmissing-format-attribute
+BUILD_CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags simavr)
+BUILD_CFLAGS += $(CFLAGS)
 
-BUILD_LDFLAGS = $(LDFLAGS)
-BUILD_LDADD = $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs simavr)
-BUILD_LDADD += -pthread -lutil $(LDADD)
-
-SOURCES = $(wildcard *.c)
-OBJS = $(SOURCES:.c=.o)
-TARGET = drumfish
+# Rules to build drumfish
+bin_PROGRAMS += drumfish
+drumfish_SOURCES = drumfish.c flash.c m128rfa1.c uart_pty.c
+drumfish_OBJS = $(drumfish_SOURCES:.c=.o)
+drumfish_LDFLAGS = $(LDFLAGS)
+drumfish_LDADD = $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs simavr)
+drumfish_LDADD += -pthread -lutil $(LDADD)
 
 # Very basic quiet rules
 ifneq ($(V),)
@@ -34,17 +36,17 @@ else
 endif
 
 .PHONY: all
-all: $(TARGET)
+all: $(bin_PROGRAMS)
 
 %.o: %.c
 	@echo "  CC $@"
 	$(Q)$(CC) $(BUILD_CFLAGS) -o $@ -c $<
 
-$(TARGET): $(OBJS)
+drumfish: $(drumfish_OBJS)
 	@echo "  CCLD $@"
-	$(Q)$(CC) $(BUILD_LDFLAGS) -o $@ $^ $(BUILD_LDADD)
+	$(Q)$(CC) $($@_LDFLAGS) -o $@ $^ $($@_LDADD)
 
 .PHONY: clean
 clean:
-	$(Q)rm -f $(OBJS)
-	$(Q)rm -f $(TARGET)
+	$(Q)rm -f $(drumfish_OBJS)
+	$(Q)rm -f $(bin_PROGRAMS)
