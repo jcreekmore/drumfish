@@ -15,11 +15,12 @@ BUILD_CFLAGS = -std=gnu99 -g \
   -Wreturn-type -Wunused-label \
   -Wcast-qual -Wdisabled-optimization \
   -Wwrite-strings -Wmissing-format-attribute \
-			   $(shell PKG_CONFIG_LIBDIR=/usr/local/lib/pkgconfig/ pkg-config --cflags simavr) \
-			   $(CFLAGS)
+  $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags simavr) \
+  $(CFLAGS)
+
 BUILD_LDFLAGS = $(LDFLAGS)
-BUILD_LDADD = $(shell PKG_CONFIG_LIBDIR=/usr/local/lib/pkgconfig/ pkg-config --libs simavr) \
-			  -pthread -lutil $(LDADD)
+BUILD_LDADD = $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs simavr)
+BUILD_LDADD += -pthread -lutil $(LDADD)
 
 SOURCES = $(wildcard *.c)
 OBJS = $(SOURCES:.c=.o)
