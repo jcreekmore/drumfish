@@ -40,7 +40,7 @@ all: $(TARGET)
 	$(Q)$(CC) $(BUILD_CFLAGS) -o $@ -c $<
 
 $(TARGET): $(OBJS)
-	@echo "  CCLD $(TARGET)"
+	@echo "  CCLD $@"
 	$(Q)$(CC) $(BUILD_LDFLAGS) -o $@ $^ $(BUILD_LDADD)
 
 .PHONY: clean
