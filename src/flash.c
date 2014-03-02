@@ -78,7 +78,7 @@ flash_open_or_create(const struct drumfish_cfg *config, off_t len)
     int fd = -1;
     struct stat st;
     int ret;
-    int must_ff = 0;
+    int must_ff = config->erase_pflash;
     uint8_t *buf;
     const char *file = config->pflash;
 

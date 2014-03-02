@@ -29,6 +29,7 @@ struct drumfish_cfg {
     int foreground;
     int verbose;
     short gdb;
+    int erase_pflash;
 };
 
 #endif /* __DRUMFISH_H__ */

@@ -72,6 +72,7 @@ usage(const char *argv0)
 "\n"
 "  -p pflash    - Path to device's progammable flash storage\n"
 "  -f ihex      - Load the requested 'ihex' file into the device's flash\n"
+"  -e           - Erase all of progammable flash prior to loading any data\n"
 "  -g port      - Runs the AVR CPU under gdbserver on 'port'\n"
 "  -v           - Increase verbosity of messages\n"
 "  -m           - Radio MAC address\n"
@@ -109,9 +110,13 @@ main(int argc, char *argv[])
     config.foreground = 1;
     config.verbose = 0;
     config.gdb = 0;
+    config.erase_pflash = 0;
 
-    while ((opt = getopt(argc, argv, "f:p:m:vgh")) != -1) {
+    while ((opt = getopt(argc, argv, "ef:p:m:vgh")) != -1) {
         switch (opt) {
+            case 'e':
+                config.erase_pflash = 1;
+                break;
             case 'f':
                 /* Increment how many file names we need to keep track of */
                 flash_file_len++;
