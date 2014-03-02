@@ -34,6 +34,7 @@
 
 #include <sim_hex.h>
 
+#include "drumfish.h"
 #include "flash.h"
 
 static int
@@ -72,13 +73,14 @@ try_again:
 }
 
 uint8_t *
-flash_open_or_create(const char *file, off_t len)
+flash_open_or_create(const struct drumfish_cfg *config, off_t len)
 {
     int fd = -1;
     struct stat st;
     int ret;
     int must_ff = 0;
     uint8_t *buf;
+    const char *file = config->pflash;
 
 try_again:
     fd = open(file, O_RDWR | O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IRGRP);

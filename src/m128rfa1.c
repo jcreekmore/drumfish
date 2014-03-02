@@ -45,7 +45,7 @@ m128rfa1_init(avr_t *avr, void *data)
     if (avr->flash)
         free(avr->flash);
 
-    avr->flash = flash_open_or_create(config->pflash, avr->flashend + 1);
+    avr->flash = flash_open_or_create(config, avr->flashend + 1);
 }
 
 static void
