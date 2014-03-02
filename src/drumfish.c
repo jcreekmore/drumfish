@@ -45,6 +45,9 @@
  */
 avr_t *avr = NULL;
 
+/* Cores */
+avr_t *m128rfa1_create(struct drumfish_cfg *config);
+
 static void
 handler(int sig)
 {

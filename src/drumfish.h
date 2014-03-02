@@ -31,7 +31,4 @@ struct drumfish_cfg {
     short gdb;
 };
 
-
-avr_t *m128rfa1_create(struct drumfish_cfg *cfg);
-
 #endif /* __DRUMFISH_H__ */
