@@ -36,6 +36,7 @@
 
 #include "drumfish.h"
 #include "flash.h"
+#include "df_cores.h"
 
 #define DEFAULT_PFLASH_PATH "/.drumfish/pflash.dat"
 #define MAX_FLASH_FILES 1024
@@ -44,9 +45,6 @@
  * the AVR core.
  */
 avr_t *avr = NULL;
-
-/* Cores */
-avr_t *m128rfa1_create(struct drumfish_cfg *config);
 
 static void
 handler(int sig)

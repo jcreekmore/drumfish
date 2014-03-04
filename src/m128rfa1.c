@@ -32,6 +32,7 @@
 
 #include "drumfish.h"
 #include "flash.h"
+#include "df_cores.h"
 
 #define PC_START 0x1f800
 
