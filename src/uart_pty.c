@@ -307,10 +307,14 @@ uart_pty_connect(uart_pty_t *p)
     avr_irq_t *src, *dst, *xon, *xoff;
     char uart_link[1024];
 
-	// disable the stdio dump, as we are sending binary there
-	avr_ioctl(p->avr, AVR_IOCTL_UART_GET_FLAGS(p->uart), &f);
-	f &= ~AVR_UART_FLAG_STDIO;
-	avr_ioctl(p->avr, AVR_IOCTL_UART_SET_FLAGS(p->uart), &f);
+    /* Disable stdio echoing of the UART since we are transmitting
+     * binary data. (This feature should really be an opt-in rather
+     * than an opt-out. Additionally don't do an arbitary usleep(1)
+     * which messes up UART timing.
+     */
+    avr_ioctl(p->avr, AVR_IOCTL_UART_GET_FLAGS(p->uart), &f);
+    f &= ~(AVR_UART_FLAG_STDIO|AVR_UART_FLAG_POOL_SLEEP);
+    avr_ioctl(p->avr, AVR_IOCTL_UART_SET_FLAGS(p->uart), &f);
 
 	src = avr_io_getirq(p->avr, AVR_IOCTL_UART_GETIRQ(p->uart),
             UART_IRQ_OUTPUT);
