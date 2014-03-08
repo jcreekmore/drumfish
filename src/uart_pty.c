@@ -152,7 +152,7 @@ uart_pty_thread(void *param)
 		}
 
         /* Something short but not too short */
-        ret = poll(&pfd, 1, 500);
+        ret = poll(&pfd, 1, 1);
 
 		if (!ret)
 			continue;
