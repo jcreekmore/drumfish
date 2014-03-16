@@ -42,9 +42,13 @@ all: $(bin_PROGRAMS)
 	@echo "  CC $@"
 	$(Q)$(CC) $(BUILD_CFLAGS) -o $@ -c $<
 
-drumfish: $(drumfish_OBJS)
+%: .libs/%
+	-@cp ../run_wrapper.sh $@
+
+.libs/drumfish: $(drumfish_OBJS)
+	-@mkdir -p $(@D)
 	@echo "  CCLD $@"
-	$(Q)$(CC) $($@_LDFLAGS) -o $@ $^ $($@_LDADD)
+	$(Q)$(CC) $($(@F)_LDFLAGS) -o $@ $^ $($(@F)_LDADD)
 
 .PHONY: clean
 clean:

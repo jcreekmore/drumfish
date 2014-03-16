@@ -1,3 +1,4 @@
 *.o
 
+/src/.libs/
 /src/drumfish
