@@ -1,7 +1,8 @@
 
 bin_PROGRAMS =
 
-export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
+simavr_LIBS = $(shell pwd)/../simavr/simavr/obj-${shell $(CC) -dumpmachine}
+
 BUILD_CFLAGS = -std=gnu99 -g \
   -Wall -Wextra -W \
   -Wbad-function-cast \
@@ -17,7 +18,7 @@ BUILD_CFLAGS = -std=gnu99 -g \
   -Wreturn-type -Wunused-label \
   -Wcast-qual -Wdisabled-optimization \
   -Wwrite-strings -Wmissing-format-attribute
-BUILD_CFLAGS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags simavr)
+BUILD_CFLAGS += -I../simavr/simavr/sim/
 BUILD_CFLAGS += $(CFLAGS)
 
 # Rules to build drumfish
@@ -25,7 +26,7 @@ bin_PROGRAMS += drumfish
 drumfish_SOURCES = drumfish.c flash.c m128rfa1.c uart_pty.c df_log.c
 drumfish_OBJS = $(drumfish_SOURCES:.c=.o)
 drumfish_LDFLAGS = $(LDFLAGS)
-drumfish_LDADD = $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs simavr)
+drumfish_LDADD = -L$(simavr_LIBS) -lsimavr -lelf
 drumfish_LDADD += -pthread -lutil $(LDADD)
 
 # Very basic quiet rules
@@ -47,7 +48,7 @@ all: $(bin_PROGRAMS)
 
 .libs/drumfish: $(drumfish_OBJS)
 	-@mkdir -p $(@D)
-	@echo "  CCLD $@"
+	@echo "  CCLD $(@F)"
 	$(Q)$(CC) $($(@F)_LDFLAGS) -o $@ $^ $($(@F)_LDADD)
 
 .PHONY: clean

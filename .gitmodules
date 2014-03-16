@@ -1,0 +1,4 @@
+[submodule "simavr"]
+	path = simavr
+	url = https://github.com/cardoe/simavr.git
+	branch = merged
