@@ -66,7 +66,8 @@ uart_pty_in_hook(
     (void)irq;
 
     uart_pty_t *p = (uart_pty_t*)param;
-    df_log_msg(DF_LOG_DEBUG, "uart_pty_in_hook %02x\n", value);
+    df_log_msg(DF_LOG_DEBUG, "AVR UART%c -> out fifo (towards pty) %02x\n",
+            p->uart, value);
     uart_pty_fifo_write(&p->port.in, value);
 }
 
