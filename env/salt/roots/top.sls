@@ -1,3 +1,4 @@
 base:
     '*':
         - avr
+        - libraries
