@@ -84,10 +84,10 @@ m128rfa1_create(struct drumfish_cfg *config)
     avr->frequency = 16000000;
 
     /* Set our fuses */
-    avr->fuse[0] = 0xEF;
-    avr->fuse[1] = 0xE6;
-    avr->fuse[2] = 0x1C;
-    //avr->fuse[3] = 0xFE;
+    avr->fuse[0] = 0xE6; // low
+    avr->fuse[1] = 0x1C; // high
+    avr->fuse[2] = 0xFE; // extended
+    //avr->lockbits = 0xEF; // lock bits
 
     /* Check to see if we initialized our flash */
     if (!avr->flash) {
